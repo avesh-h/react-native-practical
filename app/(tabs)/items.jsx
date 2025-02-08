@@ -8,8 +8,10 @@ import {
   SafeAreaView,
   ScrollView,
 } from "react-native";
+import { useForm } from "react-hook-form";
 
 export default function AddressForm() {
+  const { control } = useForm();
   const [address, setAddress] = useState({
     pincode: "",
     city: "",
@@ -54,7 +56,13 @@ export default function AddressForm() {
             placeholderTextColor="#888"
           />
 
-          <View style={styles.rowInput}>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
             <TextInput
               style={[styles.input, styles.halfInput]}
               value={address.city}
@@ -110,6 +118,14 @@ export default function AddressForm() {
             value={address.receiverPhone}
             onChangeText={(text) => handleInputChange("receiverPhone", text)}
             placeholder="Receiver's phone number"
+            placeholderTextColor="#888"
+          />
+
+          <TextInput
+            style={styles.input}
+            value={address.buildingNo}
+            onChangeText={(text) => handleInputChange("petName", text)}
+            placeholder="Pet's name"
             placeholderTextColor="#888"
           />
 
@@ -176,15 +192,12 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 5,
-    padding: 12,
+    borderColor: "#EAECF0",
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     marginBottom: 15,
     fontSize: 14,
-  },
-  rowInput: {
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
   halfInput: {
     width: "48%",

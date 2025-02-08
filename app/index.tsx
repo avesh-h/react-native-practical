@@ -1,56 +1,31 @@
-import React, { useCallback, useEffect, useState } from "react";
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
-import { Button, StyleSheet, Text, View } from "react-native";
+import StyledButton from "@/components/Button";
+import CustomModal from "@/components/Modal";
+import React, { useContext, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import * as Location from "expo-location";
+import { LocationContext } from "@/contexts/LocationProvider";
+import { router } from "expo-router";
 
-export default function App() {
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null
-  );
-  const [permissions, requestStatus] = Location.useForegroundPermissions({});
+function Index() {
+  const { status, requestLocationPermission, setUserLocation } =
+    useContext(LocationContext);
 
-  useEffect(() => {
-    async function getCurrentLocation() {
-      if (permissions?.status !== "granted") {
-        const res = await requestStatus();
-        if (res?.granted) {
-          console.log("here granted");
-          const currPosition = await Location.getLastKnownPositionAsync({
-            // accuracy:
-            //   Location.Accuracy.Balanced ||
-            //   Location.Accuracy.Low ||
-            //   Location.Accuracy.High ||
-            //   Location.Accuracy.Lowest,
-            // requiredAccuracy: Location.Accuracy.Balanced,
-          });
-          console.log({ currPosition });
-          setLocation(currPosition);
-        } else {
-          console.log("here denied");
-          // alert("request not granted");
-        }
+  const redirectToMaps = async () => {
+    if (status !== "granted") {
+      const res = await requestLocationPermission?.();
+      if (res?.granted) {
+        const currPosition = await Location.getLastKnownPositionAsync({});
+        setUserLocation?.(currPosition);
       }
     }
-    getCurrentLocation();
-  }, []);
-
-  console.log(location);
+    router.push("/map-screen");
+  };
 
   return (
     <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        provider={PROVIDER_GOOGLE}
-        // zoomControlEnabled
-      />
-      <View style={styles.button}>
-        <Button
-          title="Request"
-          onPress={async () => {
-            await requestStatus();
-          }}
-        />
-      </View>
+      <CustomModal>
+        <StyledButton label="Add address" onPress={redirectToMaps} />
+      </CustomModal>
     </View>
   );
 }
@@ -58,12 +33,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  map: {
-    flex: 1,
-    height: "50%",
-  },
-  button: {
-    flex: 1 / 3,
+    backgroundColor: "#F5F6FB",
   },
 });
+
+export default Index;

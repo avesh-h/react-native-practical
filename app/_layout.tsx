@@ -35,6 +35,20 @@ export default function RootLayout() {
             },
           }}
         />
+        <Stack.Screen
+          name="confirm-location"
+          options={{
+            headerShown: true,
+            header: (options) => {
+              return (
+                <Header
+                  title={"Confirm Location"}
+                  back={options.navigation.goBack}
+                />
+              );
+            },
+          }}
+        />
       </Stack>
     </LocationProvider>
   );

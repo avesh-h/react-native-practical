@@ -12,8 +12,10 @@ export default function Address() {
 
   return (
     <View style={styles.container}>
-      {status !== "granted" && <LocationEnabler />}
-      <View style={[styles.places, status !== "granted" ? { top: 50 } : {}]}>
+      {status == "granted" && (
+        <LocationEnabler title1={"Use Current Location"} />
+      )}
+      <View style={[styles.places]}>
         <GooglePlacesScreen />
       </View>
       <StyledButton
@@ -34,11 +36,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F6FB",
     position: "relative",
-    paddingTop: 14,
   },
   places: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingTop: 14,
   },
   button: {
     backgroundColor: "#fff",

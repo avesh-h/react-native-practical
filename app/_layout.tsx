@@ -8,13 +8,27 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen
-          name="map-screen"
+          name="add-address"
           options={{
             headerShown: true,
             header: (options) => {
               return (
                 <Header
-                  title={"Confirm Location"}
+                  title={"Add Address"}
+                  back={options.navigation.goBack}
+                />
+              );
+            },
+          }}
+        />
+        <Stack.Screen
+          name="manual-address"
+          options={{
+            headerShown: true,
+            header: (options) => {
+              return (
+                <Header
+                  title={"Add Address"}
                   back={options.navigation.goBack}
                 />
               );

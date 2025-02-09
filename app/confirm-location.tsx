@@ -1,46 +1,52 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Button, StyleSheet, Text, View } from "react-native";
 import { LocationContext } from "@/contexts/LocationProvider";
-import LocationEnabler from "@/components/LocationEnabler";
 import GooglePlacesScreen from "@/components/SearchPlaces";
-import * as Location from "expo-location";
+import { MaterialIcons } from "@expo/vector-icons";
 
 export default function ConfirmLocation() {
   const { status, selectedLocation } = useContext(LocationContext);
-  console.log(selectedLocation);
+
+  const [region, setRegion] = useState({
+    latitude: selectedLocation?.geometry?.location?.lat || 37.78825,
+    longitude: selectedLocation?.geometry?.location?.lng || 122.4324,
+    latitudeDelta: 0.003,
+    longitudeDelta: 0.003,
+  });
+
+  const handleRegionChangeComplete = (newRegion: any) => {
+    setRegion(newRegion);
+  };
+
   return (
     <View style={styles.container}>
-      {/* <LocationEnabler /> */}
       {/* <GooglePlacesScreen /> */}
       {(status === "granted" || !!selectedLocation?.geometry) && (
-        <MapView
-          style={styles.map}
-          provider={PROVIDER_GOOGLE}
-          showsUserLocation={true}
-          initialRegion={{
-            latitude: selectedLocation?.geometry?.location?.lat || 37.78825,
-            longitude: selectedLocation?.geometry?.location?.lng || 122.4324,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-        >
+        <>
+          <MapView
+            style={styles.map}
+            provider={PROVIDER_GOOGLE}
+            showsUserLocation={true}
+            initialRegion={region}
+            onRegionChangeComplete={handleRegionChangeComplete}
+          ></MapView>
           {selectedLocation && (
-            <Marker
-              coordinate={{
-                latitude: selectedLocation.geometry.location.longitude | 0,
-                longitude: selectedLocation.geometry.location.latitude | 0,
-              }}
-              style={{
-                position: "sticky",
-                left: "50%",
-                top: "50%",
-              }}
-              // useLegacyPinView={true}
-              title="you are here"
-            />
+            <>
+              <View style={styles.markerFixed}>
+                <View style={styles.outer}>
+                  <View style={styles.inner} />
+                </View>
+              </View>
+            </>
           )}
-        </MapView>
+        </>
       )}
     </View>
   );
@@ -53,6 +59,31 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  outer: {
+    height: 38,
+    width: 38,
+    backgroundColor: "#DAFF6F",
+    borderRadius: 19,
     position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+    opacity: 0.5,
+  },
+  inner: {
+    height: 12,
+    width: 12,
+    backgroundColor: "#7E953C",
+    borderRadius: 6,
+    opacity: 0.5,
+  },
+  markerFixed: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -19,
+    marginTop: -19,
+    zIndex: 30,
+    elevation: 10,
   },
 });

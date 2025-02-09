@@ -12,7 +12,7 @@ export default function Address() {
 
   return (
     <View style={styles.container}>
-      {status == "granted" && (
+      {status !== "granted" && (
         <LocationEnabler title1={"Use Current Location"} />
       )}
       <View style={[styles.places]}>

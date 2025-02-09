@@ -35,6 +35,7 @@ const GooglePlacesScreen = ({ customStyles }: Props) => {
         onPress={(data, details = null) => {
           setSelectedLocation?.(details!);
           // setClear(true);
+          inputRef.current?.setAddressText("");
           route?.name !== "/confirm-location" &&
             router.push("/confirm-location");
         }}
@@ -52,7 +53,7 @@ const GooglePlacesScreen = ({ customStyles }: Props) => {
         //   onBlur: () => setClear(false),
         // }}
         ref={inputRef as LegacyRef<GooglePlacesAutocompleteRef>}
-        keepResultsAfterBlur={true}
+        keepResultsAfterBlur={false}
         debounce={500}
         renderRow={(options) => {
           return <Text>{options.description}</Text>;

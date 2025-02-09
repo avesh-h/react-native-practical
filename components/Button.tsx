@@ -6,6 +6,7 @@ type Props = {
   labelStyles?: object;
   customStyles?: object;
   onPress?: () => void;
+  startIcon?: React.ReactNode;
 };
 
 export default function StyledButton({
@@ -13,9 +14,11 @@ export default function StyledButton({
   labelStyles,
   onPress,
   customStyles,
+  startIcon,
 }: Props) {
   return (
     <Pressable style={[styles.button, customStyles]} onPress={onPress}>
+      {startIcon}
       <Text style={[styles.text, labelStyles]}>{label}</Text>
     </Pressable>
   );
@@ -28,6 +31,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
   },
   text: {
     fontWeight: "400",

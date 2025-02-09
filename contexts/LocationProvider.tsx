@@ -6,42 +6,41 @@ import React, {
   useState,
 } from "react";
 import * as Location from "expo-location";
+import { GooglePlaceDetail } from "react-native-google-places-autocomplete";
 
 type ContextValueTypes = {
   status?: Location.PermissionStatus | undefined;
   requestLocationPermission?: () => Promise<Location.PermissionResponse>;
   userLocation?: Location.LocationObject | null;
   // getCurrentLocation?: () => Promise<void>;
-  setUserLocation?: Dispatch<SetStateAction<Location.LocationObject | null>>;
+  // setUserLocation?: Dispatch<SetStateAction<Location.LocationObject | null>>;
+  setUserLocation?: (location: {
+    latitude: number | undefined;
+    longitude: number | undefined;
+  }) => void;
+  selectedLocation: GooglePlaceDetail | undefined;
+  setSelectedLocation: Dispatch<GooglePlaceDetail>;
 };
 
-export const LocationContext = createContext<ContextValueTypes>({});
+export const LocationContext = createContext<ContextValueTypes>({
+  setSelectedLocation: () => {},
+  selectedLocation: undefined,
+});
 
 function LocationProvider({ children }: PropsWithChildren) {
   const [permissions, requestStatus] = Location.useForegroundPermissions();
   const [userLocation, setUserLocation] =
     useState<Location.LocationObject | null>(null);
-
-  // async function getCurrentLocation() {
-  //   if (permissions?.status !== "granted") {
-  //     const res = await requestStatus();
-  //     if (res?.granted) {
-  //       const currPosition = await Location.getLastKnownPositionAsync({});
-  //       setUserLocation(currPosition);
-  //     } else {
-  //       alert("request not granted");
-  //     }
-  //   }
-  // }
-
+  const [selectedLocation, setSelectedLocation] = useState<GooglePlaceDetail>();
   return (
     <LocationContext.Provider
       value={{
         status: permissions?.status,
         requestLocationPermission: requestStatus,
         userLocation,
-        // getCurrentLocation,
-        setUserLocation,
+        selectedLocation,
+        setUserLocation: (location: any) => setUserLocation(location),
+        setSelectedLocation,
       }}
     >
       {children}

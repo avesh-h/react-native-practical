@@ -18,7 +18,7 @@ function Index() {
         setUserLocation?.(currPosition);
       }
     }
-    router.push("/map-screen");
+    router.push("/add-address");
   };
 
   return (

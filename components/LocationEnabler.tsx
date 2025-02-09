@@ -29,8 +29,10 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
     backgroundColor: "rgba(255, 246, 247, 1)",
     flexDirection: "row",
-    position: "absolute",
+    position: "relative",
+    top: 0,
     columnGap: 8,
+    zIndex: 10,
   },
   description: {
     rowGap: 2,

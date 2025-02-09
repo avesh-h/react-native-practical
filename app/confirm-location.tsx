@@ -37,14 +37,14 @@ export default function ConfirmLocation() {
       </View>
       {(status === "granted" || !!selectedLocation?.geometry) && (
         <>
-          {/* <MapView
+          <MapView
             style={styles.map}
             provider={PROVIDER_GOOGLE}
             showsUserLocation={true}
             region={region}
             onRegionChangeComplete={handleRegionChangeComplete}
             loadingEnabled={true}
-          /> */}
+          />
           {selectedLocation && (
             <>
               <View style={styles.markerFixed}>

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import LocationEnabler from "@/components/LocationEnabler";
 import GooglePlacesScreen from "@/components/SearchPlaces";
@@ -9,6 +9,7 @@ import { router } from "expo-router";
 
 export default function Address() {
   const { status } = useContext(LocationContext);
+
   return (
     <View style={styles.container}>
       {status !== "granted" && <LocationEnabler />}

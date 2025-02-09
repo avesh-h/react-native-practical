@@ -13,7 +13,7 @@ import { router } from "expo-router";
 const GooglePlacesScreen = () => {
   const apiKey = Constants.expoConfig?.extra?.googlePlacesApiKey;
   const { setSelectedLocation } = useContext(LocationContext);
-  console.log({ setSelectedLocation });
+
   return (
     <View style={styles.container}>
       <GooglePlacesAutocomplete

@@ -13,6 +13,7 @@ import { GooglePlaceDetail } from "react-native-google-places-autocomplete";
 import LocationEnabler from "@/components/LocationEnabler";
 import CurrentLocationButton from "@/components/CurrentLocationButton";
 import * as Location from "expo-location";
+import Constants from "expo-constants";
 
 export default function ConfirmLocation() {
   const { status, selectedLocation, setSelectedLocation } =
@@ -33,16 +34,25 @@ export default function ConfirmLocation() {
   ]);
 
   const handleRegionChangeComplete = useCallback(
-    (newRegion: Region) => {
-      // console.log({ newRegion });
-      setSelectedLocation((prev: GooglePlaceDetail) => {
-        if (!prev) return {} as GooglePlaceDetail;
-        const newRes = JSON.parse(JSON.stringify(prev));
-        console.log(newRes.geometry.location.latitude, newRegion?.latitude);
-        newRes.geometry.location.latitude = newRegion?.latitude;
-        newRes.geometry.location.longitude = newRegion?.longitude;
-        return newRes;
-      });
+    async (newRegion: Region) => {
+      const { latitude, longitude } = newRegion;
+      // Fetch address from Google Geocoding API
+      //Note : Need to create different callback for this
+      const apiKey = Constants.expoConfig?.extra?.googlePlacesApiKey;
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
+
+      try {
+        const response = await fetch(geocodeUrl);
+        const data = await response.json();
+        if (data.status === "OK") {
+          const placeDetails = data.results[0];
+          setSelectedLocation((prev: GooglePlaceDetail) => {
+            return placeDetails ? placeDetails : prev;
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching address:", error);
+      }
     },
     [setSelectedLocation]
   );
@@ -52,7 +62,6 @@ export default function ConfirmLocation() {
       accuracy: Location.Accuracy.High,
       timeInterval: 10000,
     });
-    // console.log({ currLocation });
     if (currLocation) {
       const { latitude, longitude } = currLocation?.coords;
       mapRef.current!.animateToRegion({
@@ -61,17 +70,9 @@ export default function ConfirmLocation() {
         latitudeDelta: 0.003,
         longitudeDelta: 0.003,
       });
-      // handleRegionChangeComplete({
-      //   latitude,
-      //   longitude,
-      //   latitudeDelta: 0.003,
-      //   longitudeDelta: 0.003,
-      // });
     }
   }, [handleRegionChangeComplete]);
 
-  // console.log(selectedLocation?.geometry?.location, "last");
-  console.log(selectedLocation);
   return (
     <View style={styles.container}>
       <View style={styles.customSearch}>

@@ -5,9 +5,10 @@ import { HelperText, TextInput, TextInputProps } from "react-native-paper";
 
 type Props = {
   name: string;
+  fieldStyle?: object;
 } & TextInputProps;
 
-function RHFTextField({ name, ...props }: Props) {
+function RHFTextField({ name, fieldStyle, ...props }: Props) {
   const { control } = useFormContext();
   return (
     <Controller
@@ -22,16 +23,21 @@ function RHFTextField({ name, ...props }: Props) {
             onChangeText={(e) => field.onChange(e)}
             autoFocus={false}
             {...props}
-            style={styles.field}
+            style={{
+              ...styles.field,
+              ...fieldStyle,
+            }}
             placeholderTextColor={"#959393"}
             outlineStyle={{
               borderWidth: 0,
               borderRadius: 0,
             }}
           />
-          <HelperText visible={!!error?.message} type="error">
-            {error?.message}
-          </HelperText>
+          {/* {!!error && (
+            <HelperText type="error" visible={!!error?.message}>
+              {error?.message}
+            </HelperText>
+          )} */}
         </>
       )}
     />

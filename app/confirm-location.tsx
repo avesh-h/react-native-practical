@@ -1,42 +1,50 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import { Button, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useContext, useMemo } from "react";
+import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps";
+import { StyleSheet, View } from "react-native";
 import { LocationContext } from "@/contexts/LocationProvider";
 import GooglePlacesScreen from "@/components/SearchPlaces";
-import { MaterialIcons } from "@expo/vector-icons";
+import { GooglePlaceDetail } from "react-native-google-places-autocomplete";
+import LocationEnabler from "@/components/LocationEnabler";
 
 export default function ConfirmLocation() {
-  const { status, selectedLocation } = useContext(LocationContext);
+  const { status, selectedLocation, setSelectedLocation } =
+    useContext(LocationContext);
 
-  const [region, setRegion] = useState({
-    latitude: selectedLocation?.geometry?.location?.lat || 37.78825,
-    longitude: selectedLocation?.geometry?.location?.lng || 122.4324,
-    latitudeDelta: 0.003,
-    longitudeDelta: 0.003,
-  });
+  const region = useMemo(() => {
+    return {
+      latitude: selectedLocation?.geometry?.location?.lat || 0,
+      longitude: selectedLocation?.geometry?.location?.lng || 0,
+      latitudeDelta: 0.003,
+      longitudeDelta: 0.003,
+    };
+  }, [selectedLocation?.geometry?.location]);
 
-  const handleRegionChangeComplete = (newRegion: any) => {
-    setRegion(newRegion);
-  };
+  const handleRegionChangeComplete = useCallback((newRegion: Region) => {
+    setSelectedLocation((prev: GooglePlaceDetail) => {
+      if (!prev) return {} as GooglePlaceDetail;
+      const newRes = JSON.parse(JSON.stringify(prev));
+      newRes.geometry.location.latitude = newRegion?.latitude;
+      newRes.geometry.location.longitude = newRegion?.longitude;
+      return newRes;
+    });
+  }, []);
 
   return (
     <View style={styles.container}>
-      {/* <GooglePlacesScreen /> */}
+      <View style={styles.customSearch}>
+        <GooglePlacesScreen customStyles={styles.search} />
+        <LocationEnabler customStyles={styles.enabler} />
+      </View>
       {(status === "granted" || !!selectedLocation?.geometry) && (
         <>
-          <MapView
+          {/* <MapView
             style={styles.map}
             provider={PROVIDER_GOOGLE}
             showsUserLocation={true}
-            initialRegion={region}
+            region={region}
             onRegionChangeComplete={handleRegionChangeComplete}
-          ></MapView>
+            loadingEnabled={true}
+          /> */}
           {selectedLocation && (
             <>
               <View style={styles.markerFixed}>
@@ -85,5 +93,20 @@ const styles = StyleSheet.create({
     marginTop: -19,
     zIndex: 30,
     elevation: 10,
+  },
+  search: {
+    zIndex: 10,
+  },
+  enabler: {
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    paddingTop: 30,
+    boxShadow: "0px 4px 12 0 rgba(0, 0, 0, 0.17)",
+  },
+  customSearch: {
+    position: "absolute",
+    paddingHorizontal: 10,
+    alignItems: "center",
+    rowGap: 0,
   },
 });

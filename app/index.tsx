@@ -7,18 +7,19 @@ import { LocationContext } from "@/contexts/LocationProvider";
 import { router } from "expo-router";
 
 function Index() {
-  const { status, requestLocationPermission, setUserLocation } =
-    useContext(LocationContext);
+  const { status, requestLocationPermission } = useContext(LocationContext);
 
   const redirectToMaps = async () => {
     if (status !== "granted") {
       const res = await requestLocationPermission?.();
       if (res?.granted) {
-        const currPosition = await Location.getLastKnownPositionAsync({});
-        setUserLocation?.(currPosition);
+        router.push("/confirm-location");
+      } else {
+        router.push("/add-address");
       }
+    } else {
+      router.push("/confirm-location");
     }
-    router.push("/add-address");
   };
 
   return (

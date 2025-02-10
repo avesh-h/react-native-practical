@@ -16,6 +16,10 @@ import LocationEnabler from "@/components/LocationEnabler";
 import CurrentLocationButton from "@/components/CurrentLocationButton";
 import * as Location from "expo-location";
 import getGeoCodeAddress from "@/utils/getGeocodeAddress";
+import CustomModal from "@/components/Modal";
+import { Image } from "expo-image";
+import StyledButton from "@/components/Button";
+import SelectedAddress from "@/components/SelectedAddress";
 
 export default function ConfirmLocation() {
   const { status, selectedLocation, setSelectedLocation } =
@@ -101,7 +105,27 @@ export default function ConfirmLocation() {
           )}
         </>
       }
-      <CurrentLocationButton getUserLocation={getUserLocation} />
+      <View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          width: "100%",
+          rowGap: 12,
+          zIndex: 15,
+        }}
+      >
+        <CurrentLocationButton getUserLocation={getUserLocation} />
+        <CustomModal
+          customStyles={{ position: "relative", rowGap: 16, padding: 16 }}
+        >
+          <SelectedAddress />
+          <StyledButton
+            label="Confirm Location"
+            onPress={() => {}}
+            customStyles={{ paddingVertical: 9, borderRadius: 8 }}
+          />
+        </CustomModal>
+      </View>
     </View>
   );
 }

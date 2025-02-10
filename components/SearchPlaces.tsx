@@ -13,27 +13,33 @@ import {
   GooglePlacesAutocompleteRef,
 } from "react-native-google-places-autocomplete";
 import Constants from "expo-constants";
-import { Ionicons } from "@expo/vector-icons";
-import { LocationContext } from "@/contexts/LocationProvider";
-import { router, useRouter } from "expo-router";
+import { router } from "expo-router";
 import { useRoute } from "@react-navigation/native";
-import { boolean } from "yup";
+import { LocationContext } from "@/contexts/LocationProvider";
 
-type Props = { customStyles?: object; onSelectedLocationChange?: () => void };
+type Props = {
+  customStyles?: object;
+  onSelectedLocationChange?: (details: GooglePlaceDetail | null) => void;
+};
 const apiKey = Constants.expoConfig?.extra?.googlePlacesApiKey;
 
-const GooglePlacesScreen = ({ customStyles }: Props) => {
-  const { setSelectedLocation } = useContext(LocationContext);
+const GooglePlacesScreen = ({
+  customStyles,
+  onSelectedLocationChange,
+}: Props) => {
   const route = useRoute();
   const inputRef = useRef<GooglePlacesAutocompleteRef>();
   // const [clear, setClear] = useState<boolean>(false);
+  const { status, setSelectedLocation } = useContext(LocationContext);
 
   return (
     <View style={[styles.container, customStyles]}>
       <GooglePlacesAutocomplete
         placeholder="Search area, street, name..."
         onPress={(data, details = null) => {
-          setSelectedLocation?.(details!);
+          status !== "granted"
+            ? setSelectedLocation(details!)
+            : onSelectedLocationChange?.(details);
           // setClear(true);
           inputRef.current?.setAddressText("");
           route?.name !== "/confirm-location" &&

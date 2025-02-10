@@ -2,8 +2,10 @@ import React, {
   LegacyRef,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { StyleSheet, View } from "react-native";
@@ -13,7 +15,7 @@ import { GooglePlaceDetail } from "react-native-google-places-autocomplete";
 import LocationEnabler from "@/components/LocationEnabler";
 import CurrentLocationButton from "@/components/CurrentLocationButton";
 import * as Location from "expo-location";
-import Constants from "expo-constants";
+import getGeoCodeAddress from "@/utils/getGeocodeAddress";
 
 export default function ConfirmLocation() {
   const { status, selectedLocation, setSelectedLocation } =
@@ -21,41 +23,26 @@ export default function ConfirmLocation() {
 
   const mapRef = useRef<MapView | null>(null);
 
-  const region = useMemo(() => {
-    return {
-      latitude: selectedLocation?.geometry?.location?.lat || 0,
-      longitude: selectedLocation?.geometry?.location?.lng || 0,
-      latitudeDelta: 0.003,
-      longitudeDelta: 0.003,
-    };
-  }, [
-    selectedLocation?.geometry?.location?.lat,
-    selectedLocation?.geometry?.location?.lat,
-  ]);
+  const [region, setRegion] = useState<Region>({
+    latitude: selectedLocation?.geometry?.location?.lat || 0,
+    longitude: selectedLocation?.geometry?.location?.lng || 0,
+    latitudeDelta: 0.003,
+    longitudeDelta: 0.003,
+  });
 
-  const handleRegionChangeComplete = useCallback(
-    async (newRegion: Region) => {
-      const { latitude, longitude } = newRegion;
-      // Fetch address from Google Geocoding API
-      //Note : Need to create different callback for this
-      const apiKey = Constants.expoConfig?.extra?.googlePlacesApiKey;
-      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
-
-      try {
-        const response = await fetch(geocodeUrl);
-        const data = await response.json();
-        if (data.status === "OK") {
-          const placeDetails = data.results[0];
-          setSelectedLocation((prev: GooglePlaceDetail) => {
-            return placeDetails ? placeDetails : prev;
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching address:", error);
-      }
-    },
-    [setSelectedLocation]
-  );
+  const handleRegionChangeComplete = useCallback(async (newRegion: Region) => {
+    // if (
+    //   region?.latitude !== newRegion?.latitude ||
+    //   region?.longitude !== newRegion?.longitude
+    // ) {
+    setRegion(newRegion);
+    const details = await getGeoCodeAddress({
+      latitude: newRegion.latitude,
+      longitude: newRegion.longitude,
+    });
+    if (details) setSelectedLocation(details);
+    // }
+  }, []);
 
   const getUserLocation = useCallback(async () => {
     const currLocation = await Location.getCurrentPositionAsync({
@@ -71,22 +58,34 @@ export default function ConfirmLocation() {
         longitudeDelta: 0.003,
       });
     }
-  }, [handleRegionChangeComplete]);
+  }, []);
+
+  const onSelectPlace = useCallback((details: GooglePlaceDetail | null) => {
+    const coords = details?.geometry?.location;
+    mapRef.current?.animateToRegion({
+      ...region,
+      latitude: coords?.latitude || coords?.lat || 0,
+      longitude: coords?.longitude || coords?.lng || 0,
+    });
+  }, []);
 
   return (
     <View style={styles.container}>
       <View style={styles.customSearch}>
-        <GooglePlacesScreen customStyles={styles.search} />
+        <GooglePlacesScreen
+          customStyles={styles.search}
+          onSelectedLocationChange={onSelectPlace}
+        />
         {status !== "granted" && (
           <LocationEnabler customStyles={styles.enabler} />
         )}
       </View>
-      {(status === "granted" || !!selectedLocation?.geometry) && (
+      {
         <>
           <MapView
             style={styles.map}
             provider={PROVIDER_GOOGLE}
-            region={region}
+            initialRegion={region}
             onRegionChangeComplete={handleRegionChangeComplete}
             loadingEnabled={true}
             ref={mapRef}
@@ -101,7 +100,7 @@ export default function ConfirmLocation() {
             </>
           )}
         </>
-      )}
+      }
       <CurrentLocationButton getUserLocation={getUserLocation} />
     </View>
   );

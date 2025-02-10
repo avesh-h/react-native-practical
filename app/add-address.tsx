@@ -15,9 +15,9 @@ export default function Address() {
       {status !== "granted" && (
         <LocationEnabler title1={"Use Current Location"} />
       )}
-      <View style={[styles.places]}>
-        <GooglePlacesScreen />
-      </View>
+      {/* <View style={[styles.places]}> */}
+      <GooglePlacesScreen customStyles={styles.places} />
+      {/* </View> */}
       <StyledButton
         label="Add address Manually"
         customStyles={styles.button}

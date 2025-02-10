@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import * as Location from "expo-location";
 import { GooglePlaceDetail } from "react-native-google-places-autocomplete";
+import getGeoCodeAddress from "@/utils/getGeocodeAddress";
 
 type ContextValueTypes = {
   status?: Location.PermissionStatus | undefined;
@@ -35,15 +36,11 @@ function LocationProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     const getCurrentLocation = async () => {
       if (permissions?.granted) {
-        const location = await Location.getCurrentPositionAsync({});
-        setSelectedLocation({
-          geometry: {
-            location: {
-              lat: location?.coords?.latitude || 0,
-              lng: location?.coords?.longitude || 0,
-            },
-          },
-        } as GooglePlaceDetail);
+        const {
+          coords: { latitude, longitude },
+        } = await Location.getCurrentPositionAsync({});
+        const details = await getGeoCodeAddress({ latitude, longitude });
+        setSelectedLocation(details as GooglePlaceDetail);
       }
     };
     getCurrentLocation();

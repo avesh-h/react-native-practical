@@ -1,137 +1,164 @@
-import React from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { FormProvider, useForm } from "react-hook-form";
+import React, { useContext, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import * as yup from "yup";
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import RHFTextField from "@/components/hook-form/RHFTextField";
-import { Checkbox } from "react-native-paper";
+import { Checkbox, CheckboxProps } from "react-native-paper";
+import CustomModal from "@/components/Modal";
+import StyledButton from "@/components/Button";
+import "react-native-get-random-values";
+import getGeoCodeAddress from "@/utils/getGeocodeAddress";
+import { LocationContext } from "@/contexts/LocationProvider";
+import { router } from "expo-router";
+import { DetailsProps } from "@/utils/types";
+import ReceiversDetails from "@/components/ReceiversDetails";
 
 const AddressSchema = yup.object().shape({
-  pincode: yup.string().required("Pincode is required"),
-  city: yup.string().required("City is required"),
+  address: yup.object().shape({
+    pincode: yup.string().required("Pincode is required"),
+    city: yup.string().required("City is required"),
+    state: yup.string().required("State is required"),
+    flatNo: yup
+      .string()
+      .required("House no. is required")
+      .min(1, "Flat no. is required")
+      .nullable(),
+    buildingNo: yup.string(),
+    area: yup.string().required("Area is required"),
+  }),
+  receiversDetails: yup.object().shape({
+    name: yup.string().required("Name is required"),
+    phone: yup
+      .string()
+      .min(10, "phone number is invalid")
+      .max(10, "Cannot add more than 10 digits")
+      .required("Phone number is required"),
+    petName: yup.string().nullable(),
+  }),
 });
 
 function ManualAdress() {
+  const { setRegion, setSelectedLocation } = useContext(LocationContext);
+  const [check, setChecked] = useState<
+    "checked" | "unchecked" | "indeterminate"
+  >("unchecked");
   const methods = useForm({
     mode: "onBlur",
     reValidateMode: "onChange",
-    defaultValues: { pincode: "", city: "" },
+    defaultValues: {
+      address: {
+        pincode: "394210",
+        city: "Surat",
+        state: "Gujarat",
+        flatNo: "104",
+        buildingNo: "",
+        area: "Aman Soicety",
+      },
+      receiversDetails: {
+        name: "Avesh",
+        phone: "6955124007",
+        petName: "jepliya",
+      },
+    },
     resolver: yupResolver(AddressSchema),
   });
 
   const { handleSubmit } = methods;
 
-  const onSubmit = () => {
-    //crud operation
+  const onSubmit: SubmitHandler<DetailsProps> = async (
+    values: DetailsProps
+  ) => {
+    const address = await getGeoCodeAddress({
+      details: { ...values },
+    });
+    setRegion({
+      latitude:
+        address?.geometry?.location?.latitude ||
+        address?.geometry?.location?.lat,
+      longitude:
+        address?.geometry?.location?.longitude ||
+        address?.geometry?.location?.lng,
+      latitudeDelta: 0.003,
+      longitudeDelta: 0.003,
+    });
+    setSelectedLocation(address);
+    router.replace("/confirm-location");
   };
 
   //create this page according to figma design using RHFTextField
   return (
-    <ScrollView style={styles.container}>
-      <FormProvider {...methods}>
-        <View>
-          <Text style={styles.sectionTitle}>Address</Text>
-          <RHFTextField name="pincode" placeholder="Pincode" />
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              width: "100%",
-              gap: 10,
-              paddingTop: 12,
-            }}
-          >
-            <RHFTextField
-              name="city"
-              placeholder="City"
-              fieldStyle={{ width: "50%" }}
-            />
-            <RHFTextField
-              name="state"
-              placeholder="State"
-              fieldStyle={{ width: "50%" }}
-            />
-          </View>
-          <RHFTextField
-            name="flatNo"
-            placeholder="House/Flat no"
-            fieldStyle={{ marginTop: 10 }}
-          />
-          <RHFTextField
-            name="buildingNo"
-            placeholder="Building no"
-            fieldStyle={{ marginTop: 10 }}
-          />
-          <RHFTextField
-            name="buildingNo"
-            multiline={true}
-            numberOfLines={16}
-            placeholder="Road Name/ Area / Colony"
-            fieldStyle={{ marginTop: 10, padding: 12 }}
-          />
-        </View>
-        <View style={{ marginTop: 20 }}>
-          <Text style={styles.sectionTitle}>Receiver's details</Text>
-          <RHFTextField
-            name="receiverName"
-            placeholder="Receiver's name"
-            fieldStyle={{ marginTop: 12 }}
-          />
-          <RHFTextField
-            name="receiverPhone"
-            placeholder="Receiver's phone number"
-            fieldStyle={{ marginTop: 12 }}
-          />
-          <RHFTextField
-            name="petName"
-            placeholder="Pet's name"
-            fieldStyle={{ marginTop: 12 }}
-          />
-        </View>
+    <FormProvider {...methods}>
+      <ScrollView style={styles.container}>
         <View
           style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
+            paddingBottom: 150,
+            paddingHorizontal: 16,
+            rowGap: 20,
           }}
         >
+          <View>
+            <Text style={styles.sectionTitle}>Address</Text>
+            <RHFTextField name="address.pincode" placeholder="Pincode" />
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                width: "100%",
+                columnGap: 10,
+                paddingTop: 12,
+              }}
+            >
+              <RHFTextField name="address.city" placeholder="City" />
+              <RHFTextField name="address.state" placeholder="State" />
+            </View>
+            <RHFTextField
+              name="address.flatNo"
+              placeholder="House/Flat no"
+              fieldStyle={{ marginTop: 10 }}
+            />
+            <RHFTextField
+              name="address.buildingNo"
+              placeholder="Building no"
+              fieldStyle={{ marginTop: 10 }}
+            />
+            <RHFTextField
+              name="address.area"
+              multiline={true}
+              numberOfLines={16}
+              placeholder="Road Name/ Area / Colony"
+              fieldStyle={{ marginTop: 10, padding: 12 }}
+            />
+          </View>
+          <ReceiversDetails />
+        </View>
+      </ScrollView>
+      <CustomModal
+        customStyles={{ paddingHorizontal: 24, paddingVertical: 16 }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Checkbox
-            status={"checked"}
+            status={check}
             color="black"
             onPress={() => {
-              // setChecked(!checked);
+              setChecked((prev: "checked" | "unchecked" | "indeterminate") =>
+                prev === "unchecked" ? "checked" : "unchecked"
+              );
             }}
           />
-          <Text>Set as default address</Text>
-          <TouchableOpacity
-            onPress={
-              () => {}
-              // setAddress((prev) => ({
-              //   ...prev,
-              //   isDefaultAddress: !prev.isDefaultAddress,
-              // }))
-            }
-          ></TouchableOpacity>
+          <Text style={{ fontWeight: "400", fontSize: 14, lineHeight: 21 }}>
+            Set as default address
+          </Text>
         </View>
-
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save Address</Text>
-        </TouchableOpacity>
-      </FormProvider>
-    </ScrollView>
+        <StyledButton label="Save Address" onPress={handleSubmit(onSubmit)} />
+      </CustomModal>
+    </FormProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
     paddingTop: 18,
     flex: 1,
     backgroundColor: "#F5F6FB",

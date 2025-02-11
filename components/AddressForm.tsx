@@ -1,233 +1,248 @@
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useContext, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { useForm } from "react-hook-form";
+import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
+import ReciverForm from "./ReceiversDetails";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { ReceiversDetails, CompleteAddress } from "@/utils/types";
+import { Button, Divider } from "react-native-paper";
+import RHFTextField from "./hook-form/RHFTextField";
+import StyledButton from "./Button";
 
-export default function AddressForm() {
-  const { control } = useForm();
-  const [address, setAddress] = useState({
-    pincode: "",
-    city: "",
-    state: "",
-    houseFlat: "",
-    buildingNo: "",
-    roadAreaColony: "",
-    receiverName: "",
-    receiverPhone: "",
-    isDefaultAddress: false,
+import { Dimensions } from "react-native";
+import { LocationContext } from "@/contexts/LocationProvider";
+import { setNewAddress } from "@/database";
+import { router } from "expo-router";
+import { v4 as uuid } from "uuid";
+const { height: screenHeight } = Dimensions.get("window"); // Get screen height
+
+const AddressSchema = yup.object().shape({
+  address: yup.object().shape({
+    landmark: yup.string(),
+    flatNo: yup.string(),
+    buildingName: yup.string(),
+    savedAs: yup.string(),
+  }),
+  receiversDetails: yup.object().shape({
+    name: yup.string().required("Name is required"),
+    phone: yup
+      .string()
+      .min(10, "phone number is invalid")
+      .max(10, "Cannot add more than 10 digits")
+      .required("Phone number is required"),
+    petName: yup.string().nullable(),
+  }),
+});
+
+export default function AddressForm({
+  setIsConfirm,
+}: {
+  setIsConfirm: Dispatch<SetStateAction<boolean>>;
+}) {
+  const { selectedLocation } = useContext(LocationContext);
+  const [savedAs, setSavedAs] = useState<string>();
+  const methods = useForm({
+    mode: "onBlur",
+    reValidateMode: "onChange",
+    defaultValues: {
+      address: {
+        flatNo: "",
+        buildingName: "",
+        landmark: "",
+        savedAs: "",
+      },
+      receiversDetails: {
+        name: "Avesh",
+        phone: "6955124007",
+        petName: "jepliya",
+      },
+    },
+    resolver: yupResolver(AddressSchema),
   });
 
-  const handleInputChange = (field: any, value: any) => {
-    setAddress((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const { handleSubmit, setValue, reset } = methods;
+
+  const onSubmit: SubmitHandler<CompleteAddress & ReceiversDetails> = async (
+    values: CompleteAddress & ReceiversDetails
+  ) => {
+    const res = await setNewAddress("my_addresses", {
+      geocodeAddress: selectedLocation,
+      id: uuid(),
+      ...values,
+    });
+    reset({});
+    setIsConfirm(false);
+    console.log({ res });
+    router.replace("/");
+    //crud operation
   };
 
-  const handleSave = () => {
-    console.log("Saved Address:", address);
-  };
+  const buttons = [
+    {
+      title: "Home",
+      value: "Home",
+      hide: savedAs === "Others",
+      onClick: () => {
+        setSavedAs("Home");
+        setValue("address.savedAs", "Home");
+      },
+    },
+    {
+      title: "Office",
+      value: "OfFice",
+      hide: savedAs === "Others",
+      onClick: () => {
+        setSavedAs("Office");
+        setValue("address.savedAs", "Office");
+      },
+    },
+    {
+      title: "Others",
+      onClick: () =>
+        setSavedAs((prev) => {
+          if (prev === "Others") {
+            setValue("address.savedAs", "Home");
+            return "Home";
+          } else {
+            setValue("address.savedAs", "");
+            return "Others";
+          }
+        }),
+    },
+  ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.headerContainer}>
-          <Text style={styles.backIcon}>←</Text>
-          <Text style={styles.headerTitle}>Add address</Text>
-        </View>
-        <View style={styles.formContainer}>
-          <Text style={styles.sectionTitle}>Address</Text>
-
-          <TextInput
-            style={styles.input}
-            value={address.pincode}
-            onChangeText={(text) => handleInputChange("pincode", text)}
-            placeholder="Pincode"
-            placeholderTextColor="#888"
-          />
-
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              value={address.city}
-              onChangeText={(text) => handleInputChange("city", text)}
-              placeholder="City"
-              placeholderTextColor="#888"
-            />
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              value={address.state}
-              onChangeText={(text) => handleInputChange("state", text)}
-              placeholder="State"
-              placeholderTextColor="#888"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 50}
+      style={{ height: (4 / 7) * screenHeight }}
+    >
+      <FormProvider {...methods}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={{ rowGap: 13 }}>
+            <Divider />
+            <View style={{ rowGap: 12 }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "500",
+                  color: "#333",
+                }}
+              >
+                Enter Complete address
+              </Text>
+              <View
+                style={{
+                  flexDirection: "column",
+                  rowGap: 8,
+                }}
+              >
+                <RHFTextField
+                  name={"address.flatNo"}
+                  placeholder="House No./Flat No."
+                />
+                <RHFTextField
+                  name={"address.buildingName"}
+                  placeholder="Building name"
+                />
+                <RHFTextField
+                  name={"address.landmark"}
+                  placeholder="Landmark"
+                />
+              </View>
+            </View>
+            <View style={{ rowGap: 12 }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "500",
+                  color: "#333",
+                }}
+              >
+                Save address as
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  columnGap: 8,
+                  alignItems: "flex-end",
+                }}
+              >
+                {buttons?.map(({ title, hide, onClick, value }) => (
+                  <Button
+                    key={title}
+                    mode="outlined"
+                    style={[
+                      {
+                        borderRadius: 4,
+                        borderWidth: 0.4,
+                        alignSelf: "flex-start",
+                      },
+                      { display: hide ? "none" : "flex" },
+                    ]}
+                    contentStyle={[
+                      {
+                        paddingVertical: 6,
+                        paddingHorizontal: 8,
+                      },
+                      title === savedAs ? { backgroundColor: "#FFEEE6" } : {},
+                    ]}
+                    labelStyle={[
+                      {
+                        marginVertical: 0,
+                        marginHorizontal: 0,
+                        color: "#374151",
+                        fontWeight: "300",
+                      },
+                      title === savedAs ? { color: "#EF6C00" } : {},
+                    ]}
+                    onPress={() => {
+                      onClick();
+                    }}
+                  >
+                    {title}
+                  </Button>
+                ))}
+                {savedAs === "Others" && (
+                  <RHFTextField
+                    name="address.savedAs"
+                    mode="flat"
+                    placeholder="Save as"
+                    style={{
+                      backgroundColor: "#fff",
+                      height: "auto",
+                      paddingHorizontal: 0,
+                      paddingVertical: 5,
+                    }}
+                  />
+                )}
+              </View>
+            </View>
+            <ReciverForm />
+            <StyledButton
+              label="Save Address"
+              onPress={handleSubmit(onSubmit)}
             />
           </View>
-
-          <TextInput
-            style={styles.input}
-            value={address.houseFlat}
-            onChangeText={(text) => handleInputChange("houseFlat", text)}
-            placeholder="House/Flat no."
-            placeholderTextColor="#888"
-          />
-
-          <TextInput
-            style={styles.input}
-            value={address.buildingNo}
-            onChangeText={(text) => handleInputChange("buildingNo", text)}
-            placeholder="Building no."
-            placeholderTextColor="#888"
-          />
-
-          <TextInput
-            style={styles.input}
-            value={address.roadAreaColony}
-            onChangeText={(text) => handleInputChange("roadAreaColony", text)}
-            placeholder="Road Name/ Area/ Colony"
-            placeholderTextColor="#888"
-          />
-
-          <Text style={styles.sectionTitle}>Receiver's details</Text>
-
-          <TextInput
-            style={styles.input}
-            value={address.receiverName}
-            onChangeText={(text) => handleInputChange("receiverName", text)}
-            placeholder="Receiver's name"
-            placeholderTextColor="#888"
-          />
-
-          <TextInput
-            style={styles.input}
-            value={address.receiverPhone}
-            onChangeText={(text) => handleInputChange("receiverPhone", text)}
-            placeholder="Receiver's phone number"
-            placeholderTextColor="#888"
-          />
-
-          <TextInput
-            style={styles.input}
-            value={address.buildingNo}
-            onChangeText={(text) => handleInputChange("petName", text)}
-            placeholder="Pet's name"
-            placeholderTextColor="#888"
-          />
-
-          <View style={styles.defaultAddressContainer}>
-            {address.isDefaultAddress && <View style={styles.checkboxInner} />}
-            <Text>Set as default address</Text>
-            <TouchableOpacity
-              style={styles.checkbox}
-              onPress={() =>
-                setAddress((prev) => ({
-                  ...prev,
-                  isDefaultAddress: !prev.isDefaultAddress,
-                }))
-              }
-            ></TouchableOpacity>
-          </View>
-
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save Address</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </FormProvider>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: "white",
-  },
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#ddd",
-  },
-  backIcon: {
-    fontSize: 24,
-    marginRight: 15,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "500",
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-  },
-  formContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 15,
-    color: "#333",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#EAECF0",
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    marginBottom: 15,
-    fontSize: 14,
-  },
-  halfInput: {
-    width: "48%",
-  },
-  defaultAddressContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 1,
-    borderColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkboxInner: {
-    width: 14,
-    height: 14,
-    backgroundColor: "#000",
-  },
-  saveButton: {
-    backgroundColor: "#EF6C00",
-    padding: 15,
-    borderRadius: 5,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  saveButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
   },
 });

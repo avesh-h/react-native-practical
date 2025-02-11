@@ -3,17 +3,11 @@ import { StyleSheet, View, Text } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import StyledButton from "./Button";
 
-type Props = { title1?: string; customStyles?: object; hide?: boolean };
+type Props = { title1?: string; customStyles?: object };
 
-function LocationEnabler({ title1, customStyles, hide }: Props) {
+function LocationEnabler({ title1, customStyles }: Props) {
   return (
-    <View
-      style={[
-        styles.container,
-        customStyles,
-        { display: hide ? "none" : "flex" },
-      ]}
-    >
+    <View style={[styles.container, customStyles]}>
       <MaterialIcons name="location-off" size={26} color="black" />
       <View style={styles.description}>
         <Text style={styles.text1}>

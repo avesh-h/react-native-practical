@@ -20,32 +20,26 @@ import { LocationContext } from "@/contexts/LocationProvider";
 type Props = {
   customStyles?: object;
   onSelectedLocationChange?: (details: GooglePlaceDetail | null) => void;
-  hide?: boolean;
 };
 const apiKey = Constants.expoConfig?.extra?.googlePlacesApiKey;
 
 const GooglePlacesScreen = ({
   customStyles,
   onSelectedLocationChange,
-  hide,
 }: Props) => {
   const route = useRoute();
   const inputRef = useRef<GooglePlacesAutocompleteRef>();
+  // const [clear, setClear] = useState<boolean>(false);
   const { status, setSelectedLocation } = useContext(LocationContext);
 
   return (
-    <View
-      style={[
-        styles.container,
-        customStyles,
-        { display: hide ? "none" : "flex" },
-      ]}
-    >
+    <View style={[styles.container, customStyles]}>
       <GooglePlacesAutocomplete
         placeholder="Search area, street, name..."
         onPress={(data, details = null) => {
           status !== "granted" && setSelectedLocation(details!);
           onSelectedLocationChange?.(details);
+          // setClear(true);
           inputRef.current?.setAddressText("");
           route?.name !== "/confirm-location" &&
             router.push("/confirm-location");
@@ -59,6 +53,10 @@ const GooglePlacesScreen = ({
         styles={{
           textInput: styles.textInput,
         }}
+        // textInputProps={{
+        //   value: clear && "",
+        //   onBlur: () => setClear(false),
+        // }}
         ref={inputRef as LegacyRef<GooglePlacesAutocompleteRef>}
         keepResultsAfterBlur={false}
         debounce={500}

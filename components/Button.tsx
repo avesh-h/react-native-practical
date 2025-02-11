@@ -7,7 +7,6 @@ type Props = {
   customStyles?: object;
   onPress?: () => void;
   startIcon?: React.ReactNode;
-  hide?: boolean;
 };
 
 export default function StyledButton({
@@ -16,7 +15,6 @@ export default function StyledButton({
   onPress,
   customStyles,
   startIcon,
-  hide,
 }: Props) {
   return (
     <Pressable style={[styles.button, customStyles]} onPress={onPress}>

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import LocationEnabler from "@/components/LocationEnabler";
 import GooglePlacesScreen from "@/components/SearchPlaces";
@@ -6,29 +6,18 @@ import { LocationContext } from "@/contexts/LocationProvider";
 import StyledButton from "@/components/Button";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { GooglePlaceDetail } from "react-native-google-places-autocomplete";
 
 export default function Address() {
-  const { status, setRegion } = useContext(LocationContext);
-  const onSelectPlace = useCallback((details: GooglePlaceDetail | null) => {
-    const coords = details?.geometry?.location;
-    setRegion({
-      latitude: coords?.latitude || coords?.lat || 0,
-      longitude: coords?.longitude || coords?.lng || 0,
-      latitudeDelta: 0.003,
-      longitudeDelta: 0.003,
-    });
-  }, []);
+  const { status } = useContext(LocationContext);
 
   return (
     <View style={styles.container}>
       {status !== "granted" && (
         <LocationEnabler title1={"Use Current Location"} />
       )}
-      <GooglePlacesScreen
-        customStyles={styles.places}
-        onSelectedLocationChange={onSelectPlace}
-      />
+      {/* <View style={[styles.places]}> */}
+      <GooglePlacesScreen customStyles={styles.places} />
+      {/* </View> */}
       <StyledButton
         label="Add address Manually"
         customStyles={styles.button}

@@ -4,11 +4,16 @@ import { Pressable, StyleSheet, Text } from "react-native";
 
 function CurrentLocationButton({
   getUserLocation,
+  hide,
 }: {
   getUserLocation: () => void;
+  hide: boolean;
 }) {
   return (
-    <Pressable style={styles.locationButton} onPress={getUserLocation}>
+    <Pressable
+      style={[{ display: hide ? "none" : "flex" }, styles.locationButton]}
+      onPress={getUserLocation}
+    >
       <Ionicons name="locate" size={24} color="#EF6C00" />
       <Text style={{ color: "#EF6C00" }}>Use Current Location</Text>
     </Pressable>
@@ -17,7 +22,6 @@ function CurrentLocationButton({
 
 const styles = StyleSheet.create({
   locationButton: {
-    // position: "relative",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -30,7 +34,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     boxShadow: "0 4 9 1 rgba(0,0,0,0.25)",
     columnGap: 4,
-    // zIndex: 10,
   },
 });
 

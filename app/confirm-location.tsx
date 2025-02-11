@@ -1,14 +1,12 @@
 import React, {
-  LegacyRef,
   useCallback,
   useContext,
-  useEffect,
-  useMemo,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps";
-import { StyleSheet, View } from "react-native";
+import { Keyboard, StyleSheet, View } from "react-native";
 import { LocationContext } from "@/contexts/LocationProvider";
 import GooglePlacesScreen from "@/components/SearchPlaces";
 import { GooglePlaceDetail } from "react-native-google-places-autocomplete";
@@ -17,35 +15,31 @@ import CurrentLocationButton from "@/components/CurrentLocationButton";
 import * as Location from "expo-location";
 import getGeoCodeAddress from "@/utils/getGeocodeAddress";
 import CustomModal from "@/components/Modal";
-import { Image } from "expo-image";
 import StyledButton from "@/components/Button";
 import SelectedAddress from "@/components/SelectedAddress";
+import MapLoader from "@/components/MapLoader";
+import { DetailsProps } from "@/utils/types";
+import AddressForm from "@/components/AddressForm";
 
 export default function ConfirmLocation() {
-  const { status, selectedLocation, setSelectedLocation } =
-    useContext(LocationContext);
+  const {
+    status,
+    selectedLocation,
+    setSelectedLocation,
+    region,
+    setRegion,
+    loading,
+  } = useContext(LocationContext);
 
   const mapRef = useRef<MapView | null>(null);
-
-  const [region, setRegion] = useState<Region>({
-    latitude: selectedLocation?.geometry?.location?.lat || 0,
-    longitude: selectedLocation?.geometry?.location?.lng || 0,
-    latitudeDelta: 0.003,
-    longitudeDelta: 0.003,
-  });
+  const [isConfirm, setIsConfirm] = useState<boolean>(false);
 
   const handleRegionChangeComplete = useCallback(async (newRegion: Region) => {
-    // if (
-    //   region?.latitude !== newRegion?.latitude ||
-    //   region?.longitude !== newRegion?.longitude
-    // ) {
-    setRegion(newRegion);
     const details = await getGeoCodeAddress({
       latitude: newRegion.latitude,
       longitude: newRegion.longitude,
     });
     if (details) setSelectedLocation(details);
-    // }
   }, []);
 
   const getUserLocation = useCallback(async () => {
@@ -67,21 +61,25 @@ export default function ConfirmLocation() {
   const onSelectPlace = useCallback((details: GooglePlaceDetail | null) => {
     const coords = details?.geometry?.location;
     mapRef.current?.animateToRegion({
-      ...region,
       latitude: coords?.latitude || coords?.lat || 0,
       longitude: coords?.longitude || coords?.lng || 0,
+      latitudeDelta: region?.latitudeDelta || 0.003,
+      longitudeDelta: region?.longitudeDelta || 0.003,
     });
   }, []);
 
-  return (
+  return loading ? (
+    <MapLoader />
+  ) : (
     <View style={styles.container}>
       <View style={styles.customSearch}>
         <GooglePlacesScreen
           customStyles={styles.search}
           onSelectedLocationChange={onSelectPlace}
+          hide={isConfirm}
         />
         {status !== "granted" && (
-          <LocationEnabler customStyles={styles.enabler} />
+          <LocationEnabler customStyles={styles.enabler} hide={isConfirm} />
         )}
       </View>
       {
@@ -93,6 +91,12 @@ export default function ConfirmLocation() {
             onRegionChangeComplete={handleRegionChangeComplete}
             loadingEnabled={true}
             ref={mapRef}
+            scrollEnabled={!isConfirm}
+            zoomEnabled={!isConfirm}
+            rotateEnabled={!isConfirm}
+            onPress={() => {
+              isConfirm && setIsConfirm(false);
+            }}
           />
           {selectedLocation && (
             <>
@@ -105,24 +109,39 @@ export default function ConfirmLocation() {
           )}
         </>
       }
+
       <View
         style={{
-          position: "absolute",
+          position: isConfirm ? "absolute" : "absolute",
           bottom: 0,
           width: "100%",
           rowGap: 12,
-          zIndex: 15,
+          zIndex: 10,
         }}
       >
-        <CurrentLocationButton getUserLocation={getUserLocation} />
+        <CurrentLocationButton
+          getUserLocation={getUserLocation}
+          hide={isConfirm}
+        />
         <CustomModal
           customStyles={{ position: "relative", rowGap: 16, padding: 16 }}
         >
-          <SelectedAddress />
+          <SelectedAddress
+            selectedLocation={
+              selectedLocation as GooglePlaceDetail & DetailsProps
+            }
+            onChangeAddress={() => setIsConfirm(false)}
+          />
+          {isConfirm && <AddressForm setIsConfirm={setIsConfirm} />}
           <StyledButton
             label="Confirm Location"
-            onPress={() => {}}
-            customStyles={{ paddingVertical: 9, borderRadius: 8 }}
+            onPress={() => setIsConfirm(true)}
+            customStyles={{
+              paddingVertical: 9,
+              borderRadius: 8,
+              display: isConfirm ? "none" : "flex",
+            }}
+            hide={isConfirm}
           />
         </CustomModal>
       </View>
@@ -137,6 +156,7 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+    minHeight: 150,
   },
   outer: {
     height: 38,

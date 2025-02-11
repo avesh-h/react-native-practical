@@ -1,8 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export async function setNewAddress(key: string, value: any) {
+  console.log("here1");
   try {
     const data = await AsyncStorage.getItem(key);
+    console.log("here1", data);
     if (data) {
       const address: any[] = JSON.parse(data);
       address.push(value);

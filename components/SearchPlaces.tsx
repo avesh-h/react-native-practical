@@ -44,7 +44,7 @@ const GooglePlacesScreen = ({
       <GooglePlacesAutocomplete
         placeholder="Search area, street, name..."
         onPress={(data, details = null) => {
-          status !== "granted" && setSelectedLocation(details!);
+          setSelectedLocation(details!);
           onSelectedLocationChange?.(details);
           inputRef.current?.setAddressText("");
           route?.name !== "/confirm-location" &&

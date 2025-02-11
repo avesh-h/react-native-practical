@@ -79,7 +79,6 @@ export default function AddressForm({
     });
     reset({});
     setIsConfirm(false);
-    console.log({ res });
     router.replace("/");
     //crud operation
   };

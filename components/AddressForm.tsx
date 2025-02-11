@@ -59,9 +59,9 @@ export default function AddressForm({
         savedAs: "",
       },
       receiversDetails: {
-        name: "Avesh",
-        phone: "6955124007",
-        petName: "jepliya",
+        name: "",
+        phone: "",
+        petName: "",
       },
     },
     resolver: yupResolver(AddressSchema),
